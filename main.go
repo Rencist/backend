@@ -30,16 +30,20 @@ func main() {
 		jwtService service.JWTService = service.NewJWTService()
 
 		userRepository repository.UserRepository = repository.NewUserRepository(db)
+		movieRepository repository.MovieRepository = repository.NewMovieRepository(db)
 
 		userService service.UserService = service.NewUserService(userRepository)
-		
+		movieService service.MovieService = service.NewMovieService(movieRepository)
+
 		userController controller.UserController = controller.NewUserController(userService, jwtService)
+		movieController controller.MovieController = controller.NewMovieController(movieService, jwtService)
 	)
 
 	server := gin.Default()
 	server.Use(middleware.CORSMiddleware())
 	
 	routes.UserRoutes(server, userController, jwtService)
+	routes.MovieRoutes(server, movieController)
 
 	port := os.Getenv("PORT")
 	if port == "" {

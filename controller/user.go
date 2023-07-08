@@ -79,10 +79,9 @@ func(uc *userController) LoginUser(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
-	token := uc.jwtService.GenerateToken(user.ID, user.Peran)
+	token := uc.jwtService.GenerateToken(user.ID)
 	userResponse := entity.Authorization{
 		Token: token,
-		Peran: user.Peran,
 	}
 	
 	response := common.BuildResponse(true, "Berhasil Login", userResponse)

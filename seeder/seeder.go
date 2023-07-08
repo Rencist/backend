@@ -1,5 +1,15 @@
 package main
 
+import (
+	"fmt"
+	"os"
+	"tamiyochi-backend/entity"
+
+	"github.com/gocarina/gocsv"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+)
+
 // import (
 // 	"fmt"
 // 	"math/rand"
@@ -17,16 +27,11 @@ type Entry struct {
     // gorm.Model
 
     Field1 string `csv:"title"`
-    Field2 string `csv:"synopsis"`
-    Field3 string `csv:"start_date"`
-    Field4 string `csv:"score"`
-    Field5 string `csv:"scored_by"`
-    Field6 string `csv:"members"`
-    Field7 string `csv:"main_picture"`
-    Field8 string `csv:"serializations"`
-    Field9 int    `csv:"manga_id"`
-    Field10 string `csv:"genres"`
-    Field11 string `csv:"authors"`
+    Field2 string `csv:"description"`
+    Field3 string `csv:"release_date"`
+    Field4 string `csv:"poster_url"`
+    Field5 string `csv:"age_rating"`
+    Field6 int `csv:"ticket_price"`
 }
 
 // type Iot struct {
@@ -67,38 +72,36 @@ func main() {
     
 
 // //     // Open the CSV file for reading
-//     file, err := os.Open("manga_mal.csv")
-//     if err != nil {
-//         panic(err)
-//     }
-//     defer file.Close()
+    file, err := os.Open("manga_mal.csv")
+    if err != nil {
+        panic(err)
+    }
+    defer file.Close()
 
-//     var entries []Entry
-//     err = gocsv.Unmarshal(file, &entries)
-//     if err != nil {
-//         panic(err)
-//     }
+    var entries []Entry
+    err = gocsv.Unmarshal(file, &entries)
+    if err != nil {
+        panic(err)
+    }
 
-//     dsn := fmt.Sprintf("host=localhost user=postgres password=rencist dbname=tamiyochi port=5432 TimeZone=Asia/Jakarta")
-// 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-// 	if err != nil {
-// 		fmt.Println(db)
-// 		panic(err)
-// 	}
+    dsn := fmt.Sprintf("host=localhost user=postgres password=rencist dbname=sea_movie port=5432 TimeZone=Asia/Jakarta")
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		fmt.Println(db)
+		panic(err)
+	}
 
-//     for _, entry := range entries {
-//         for i := 0; i < rand.Intn(20 - 5) + 5; i++ {
-//             users := entity.User{}
-//             db.Raw("SELECT * FROM users ORDER BY RANDOM() LIMIT 1").Scan(&users)
-//             komentar := entity.Komentar{
-//                 ID: uuid.New(),
-//                 Isi: komentar[rand.Intn(24)],
-//                 UserID: users.ID,
-//                 SeriID: entry.Field9,
-//             }
-//             db.Create(&komentar)
-//         }
-//     }
+    for _, entry := range entries {
+		movie := entity.Movie{
+			Title: entry.Field1,
+			Description: entry.Field2,
+			ReleaseDate: entry.Field3,
+			PosterUrl: entry.Field4,
+			AgeRating: entry.Field5,
+			TicketPrice: entry.Field6,
+		}
+		db.Create(&movie)
+    }
 
     // nicknames := make([]string, 100)
     // emails := make([]string, 100)

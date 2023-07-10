@@ -17,6 +17,7 @@ type MovieController interface {
 	GetMovieByID(ctx *gin.Context)
 	CreateTransaction(ctx *gin.Context)
 	GetAvailableSeat(ctx *gin.Context)
+	GetUserTransaction(ctx *gin.Context)
 }
 
 type movieController struct {
@@ -169,5 +170,25 @@ func(uc *movieController) GetAvailableSeat(ctx *gin.Context) {
 	}
 
 	res := common.BuildResponse(true, "Berhasil Mendapatkan Movie", result)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func(uc *movieController) GetUserTransaction(ctx *gin.Context) {
+	token := ctx.MustGet("token").(string)
+	userID, err := uc.jwtService.GetUserIDByToken(token)
+	if err != nil {
+		response := common.BuildErrorResponse("Gagal Memproses Request", "Token Tidak Valid", nil)
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	result, err := uc.movieService.GetUserTransaction(ctx.Request.Context(), userID)
+	if err != nil {
+		res := common.BuildErrorResponse("Gagal Mendapatkan List Transaksi", err.Error(), common.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := common.BuildResponse(true, "Berhasil Mendapatkan List Transaksi", result)
 	ctx.JSON(http.StatusOK, res)
 }

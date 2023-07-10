@@ -19,6 +19,7 @@ type MovieRepository interface {
 	FindTransactionByMovieID(ctx context.Context, movieID int) ([]entity.Transaction, error)
 	GetAvailableSeat(ctx context.Context, movieID int) ([]dto.AvalilableSeat, error)
 	FindSeatByTransactionID(ctx context.Context, transactionID uuid.UUID) ([]entity.Seat, error)
+	GetUserTransaction(ctx context.Context, userID uuid.UUID) ([]entity.Transaction, error)
 }
 
 type movieConnection struct {
@@ -172,4 +173,13 @@ func(db *movieConnection) FindSeatByTransactionID(ctx context.Context, transacti
 		return seat, ux.Error
 	}
 	return seat, nil
+}
+
+func(db *movieConnection) GetUserTransaction(ctx context.Context, userID uuid.UUID) ([]entity.Transaction, error) {
+	var transaction []entity.Transaction
+	ux := db.connection.Where("user_id = ?", userID, ).Find(&transaction)
+	if ux.Error != nil {
+		return transaction, ux.Error
+	}
+	return transaction, nil
 }

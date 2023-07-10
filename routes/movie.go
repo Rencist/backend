@@ -15,5 +15,6 @@ func MovieRoutes(router *gin.Engine, MovieController controller.MovieController,
 		movieRoutes.GET("/:id", MovieController.GetMovieByID)
 		movieRoutes.POST("/transaction", middleware.Authenticate(jwtService, false), MovieController.CreateTransaction)
 		movieRoutes.GET("/available_seat/:id", MovieController.GetAvailableSeat)
+		movieRoutes.GET("/transaction", middleware.Authenticate(jwtService, false), MovieController.GetUserTransaction)
 	}
 }

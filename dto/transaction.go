@@ -12,3 +12,11 @@ type TransactionCreateDTO struct {
 
 	Seat 	[]SeatCreateDTO `gorm:"foreignKey" json:"seat" binding:"required"`
 }
+
+type TransactionResponse struct {
+	ID uuid.UUID `gorm:"primary_key;not_null" json:"id"`
+	UserName string `json:"user_name"`
+	MovieName string `json:"movie_name"`
+	TotalPrice  string `json:"total_price" binding:"required"`
+	Seat 	[]SeatCreateDTO `gorm:"foreignKey" json:"seat" binding:"required"`
+}

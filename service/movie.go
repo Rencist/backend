@@ -16,6 +16,7 @@ type MovieService interface {
 	GetMovieByID(ctx context.Context, movieID int) (entity.Movie, error)
 	CreateTransaction(ctx context.Context, transaction dto.TransactionCreateDTO) (entity.Transaction, error)
 	GetAvailableSeat(ctx context.Context, movieID int) ([]dto.AvalilableSeat, error)
+	GetUserTransaction(ctx context.Context, userID uuid.UUID) ([]dto.TransactionResponse, error)
 }
 
 type movieService struct {
@@ -75,4 +76,29 @@ func(us *movieService) CreateTransaction(ctx context.Context, transaction dto.Tr
 
 func(us *movieService) GetAvailableSeat(ctx context.Context, movieID int) ([]dto.AvalilableSeat, error) {
 	return us.movieRepository.GetAvailableSeat(ctx, movieID)
+}
+
+func(us *movieService) GetUserTransaction(ctx context.Context, userID uuid.UUID) ([]dto.TransactionResponse, error) {
+	listTransaction, err := us.movieRepository.GetUserTransaction(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	responseDTO := []dto.TransactionResponse{}
+	for _, v := range listTransaction {
+		listSeat, _ := us.movieRepository.FindSeatByTransactionID(ctx, v.ID)
+		seatDTO := []dto.SeatCreateDTO{}
+		for _, w := range listSeat {
+			seatDTO = append(seatDTO, dto.SeatCreateDTO{
+				Seat: w.Seat,
+			})
+		}
+		movieName, _ := us.movieRepository.FindMovieByID(ctx, v.MovieID)
+		responseDTO = append(responseDTO, dto.TransactionResponse{
+			ID: v.ID,
+			MovieName: movieName.Title,
+			TotalPrice: strconv.Itoa(v.TotalPrice),
+			Seat: seatDTO,
+		})
+	}
+	return responseDTO, nil
 }

@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"tamiyochi-backend/common"
+	"tamiyochi-backend/dto"
 	"tamiyochi-backend/entity"
 	"tamiyochi-backend/service"
 
@@ -14,6 +15,8 @@ import (
 type MovieController interface {
 	GetAllMovie(ctx *gin.Context)
 	GetMovieByID(ctx *gin.Context)
+	CreateTransaction(ctx *gin.Context)
+	GetAvailableSeat(ctx *gin.Context)
 }
 
 type movieController struct {
@@ -111,4 +114,60 @@ func(uc *movieController) QueryArrayRequest(ctx *gin.Context, key string) ([]map
 		}
 	}
 	return dicts
+}
+
+func(uc *movieController) CreateTransaction(ctx *gin.Context) {
+	ctx.PostFormArray("seat")
+	token := ctx.MustGet("token").(string)
+	userID, err := uc.jwtService.GetUserIDByToken(token)
+	if err != nil {
+		response := common.BuildErrorResponse("Gagal Memproses Request", "Token Tidak Valid", nil)
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, response)
+		return
+	}
+	
+	var transaction dto.TransactionCreateDTO
+	transaction.TotalPrice = ctx.Request.PostForm.Get("total_price")
+	transaction.MovieID = ctx.Request.PostForm.Get("movie_id")
+	total_seat, _ := strconv.Atoi(ctx.Request.PostForm.Get("total_seat"))
+	if total_seat <= 0 && total_seat > 6 {
+		res := common.BuildErrorResponse("Gagal Menambahkan Transaksi", "Total Seat Tidak Memenuhi Syarat", common.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+	for i := 0; i < total_seat; i++ {
+		var seat dto.SeatCreateDTO
+		seat_number, _ := strconv.Atoi(ctx.Request.PostForm.Get("seat["+strconv.Itoa(i)+"]"))
+		seat.Seat = seat_number
+		transaction.Seat = append(transaction.Seat, seat)
+	}
+	transaction.UserID = userID
+	_, err = uc.movieService.CreateTransaction(ctx.Request.Context(), transaction)
+	if err != nil {
+		res := common.BuildErrorResponse("Gagal Menambahkan Transaksi", err.Error(), common.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := common.BuildResponse(true, "Berhasil Menambahkan Transaksi", common.EmptyObj{})
+	ctx.JSON(http.StatusOK, res)
+}
+
+func(uc *movieController) GetAvailableSeat(ctx *gin.Context) {
+	movieID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		res := common.BuildErrorResponse("Gagal Mendapatkan Detail Movie", err.Error(), common.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	result, err := uc.movieService.GetAvailableSeat(ctx.Request.Context(), movieID)
+	if err != nil {
+		res := common.BuildErrorResponse("Gagal Mendapatkan Movie", err.Error(), common.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := common.BuildResponse(true, "Berhasil Mendapatkan Movie", result)
+	ctx.JSON(http.StatusOK, res)
 }

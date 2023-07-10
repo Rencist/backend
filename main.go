@@ -43,7 +43,7 @@ func main() {
 	server.Use(middleware.CORSMiddleware())
 	
 	routes.UserRoutes(server, userController, jwtService)
-	routes.MovieRoutes(server, movieController)
+	routes.MovieRoutes(server, movieController, jwtService)
 
 	port := os.Getenv("PORT")
 	if port == "" {

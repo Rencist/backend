@@ -10,7 +10,7 @@ type UserCreateDto struct {
 	Username 	string  	`json:"username" form:"username" binding:"required"`
 	Email 		string 		`json:"email" binding:"email" form:"email" binding:"required"`
 	Age 		string		`json:"age" form:"age" binding:"required"`
-	Balance 	string			`json:"balance" form:"balance"`
+	Balance 	string      `json:"balance" form:"balance"`
 	Password 	string  	`json:"password" form:"password" binding:"required"`
 }
 
@@ -19,8 +19,8 @@ type UserUpdateDto struct {
 	Name 		string  	`json:"name" form:"name"`
 	Username 	string  	`json:"username" form:"username"`
 	Email 		string 		`json:"email" binding:"email" form:"email"`
-	Age 		string			`json:"age" form:"age"`
-	Balance 	string			`json:"balance" form:"balance"`
+	Age 		string		`json:"age" form:"age"`
+	Balance 	string		`json:"balance" form:"balance"`
 	Password 	string  	`json:"password" form:"password"`
 }
 

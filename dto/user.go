@@ -6,27 +6,29 @@ import (
 
 type UserCreateDto struct {
 	ID        	uuid.UUID   `gorm:"primary_key" json:"id" form:"id"`
-	Nama 		string 		`json:"nama" form:"nama" binding:"required"`
-	Email 		string 		`json:"email" form:"email" binding:"required"`
-	NoTelp 		string 		`json:"no_telp" form:"no_telp" binding:"required"`
+	Name 		string  	`json:"name" form:"name" binding:"required"`
+	Username 	string  	`json:"username" form:"username" binding:"required"`
+	Email 		string 		`json:"email" binding:"email" form:"email" binding:"required"`
+	Age 		string		`json:"age" form:"age" binding:"required"`
+	Balance 	string			`json:"balance" form:"balance"`
 	Password 	string  	`json:"password" form:"password" binding:"required"`
-	Alamat 		string  	`json:"alamat" form:"alamat" binding:"required"`
-
-	KabupatenID int   	`gorm:"foreignKey" json:"kabupaten_id" form:"kabupaten_id" binding:"required"`
 }
 
 type UserUpdateDto struct {
 	ID        	uuid.UUID   `gorm:"primary_key" json:"id" form:"id"`
-	Nama 		string 		`json:"nama" form:"nama"`
-	Email 		string 		`json:"email" form:"email"`
-	NoTelp 		string 		`json:"no_telp" form:"no_telp"`
+	Name 		string  	`json:"name" form:"name"`
+	Username 	string  	`json:"username" form:"username"`
+	Email 		string 		`json:"email" binding:"email" form:"email"`
+	Age 		string			`json:"age" form:"age"`
+	Balance 	string			`json:"balance" form:"balance"`
 	Password 	string  	`json:"password" form:"password"`
-	Alamat 		string  	`json:"alamat" form:"alamat"`
-
-	KabupatenID int   	`gorm:"foreignKey" json:"kabupaten_id" form:"kabupaten_id" binding:"required"`
 }
 
 type UserLoginDTO struct {
 	Email 		string 		`json:"email" form:"email" binding:"email"`
 	Password 	string  	`json:"password" form:"password" binding:"required"`
+}
+
+type BalanceDTO struct {
+	Balance 	string			`json:"balance" form:"balance"`
 }

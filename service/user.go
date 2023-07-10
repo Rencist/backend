@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"errors"
+	"strconv"
 	"tamiyochi-backend/dto"
 	"tamiyochi-backend/entity"
 	"tamiyochi-backend/helpers"
@@ -20,6 +22,8 @@ type UserService interface {
 	DeleteUser(ctx context.Context, userID uuid.UUID) (error)
 	UpdateUser(ctx context.Context, userDTO dto.UserUpdateDto) (error)
 	MeUser(ctx context.Context, userID uuid.UUID) (entity.User, error)
+	TopUpBalance(ctx context.Context, userID uuid.UUID, balance int) (error)
+	WithdrawBalance(ctx context.Context, userID uuid.UUID, balance int) (error)
 }
 
 type userService struct {
@@ -33,8 +37,15 @@ func NewUserService(ur repository.UserRepository) UserService {
 }
 
 func(us *userService) RegisterUser(ctx context.Context, userDTO dto.UserCreateDto) (entity.User, error) {
-	user := entity.User{}
-	err := smapping.FillStruct(&user, smapping.MapFields(userDTO))
+	Age, err := strconv.Atoi(userDTO.Age)
+	user := entity.User{
+		Name: userDTO.Name,
+		Username: userDTO.Username,
+		Email: userDTO.Email,
+		Password: userDTO.Password,
+		Age: Age,
+		Balance: 0,
+	}
 	if err != nil {
 		return user, err
 	}
@@ -91,4 +102,19 @@ func(us *userService) UpdateUser(ctx context.Context, userDTO dto.UserUpdateDto)
 
 func(us *userService) MeUser(ctx context.Context, userID uuid.UUID) (entity.User, error) {
 	return us.userRepository.FindUserByID(ctx, userID)
+}
+
+func(us *userService) TopUpBalance(ctx context.Context, userID uuid.UUID, balance int) (error) {
+	return us.userRepository.TopUpBalance(ctx, userID, balance)
+}
+
+func(us *userService) WithdrawBalance(ctx context.Context, userID uuid.UUID, balance int) (error) {
+	user, err := us.userRepository.FindUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if user.Balance < balance {
+		return errors.New("Balance Tidak Cukup")
+	}
+	return us.userRepository.WithdrawBalance(ctx, userID, balance)
 }

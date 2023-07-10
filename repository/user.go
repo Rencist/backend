@@ -15,6 +15,8 @@ type UserRepository interface {
 	FindUserByID(ctx context.Context, userID uuid.UUID) (entity.User, error)
 	DeleteUser(ctx context.Context, userID uuid.UUID) (error)
 	UpdateUser(ctx context.Context, user entity.User) (error)
+	TopUpBalance(ctx context.Context, userID uuid.UUID, balance int) (error)
+	WithdrawBalance(ctx context.Context, userID uuid.UUID, balance int) (error)
 }
 
 type userConnection struct {
@@ -73,6 +75,22 @@ func(db *userConnection) DeleteUser(ctx context.Context, userID uuid.UUID) (erro
 
 func(db *userConnection) UpdateUser(ctx context.Context, user entity.User) (error) {
 	uc := db.connection.Updates(&user)
+	if uc.Error != nil {
+		return uc.Error
+	}
+	return nil
+}
+
+func(db *userConnection) TopUpBalance(ctx context.Context, userID uuid.UUID, balance int) (error) {
+	uc := db.connection.Model(&entity.User{}).Where("id = ?", userID).Update("balance", gorm.Expr("balance + ?", balance))
+	if uc.Error != nil {
+		return uc.Error
+	}
+	return nil
+}
+
+func(db *userConnection) WithdrawBalance(ctx context.Context, userID uuid.UUID, balance int) (error) {
+	uc := db.connection.Model(&entity.User{}).Where("id = ?", userID).Update("balance", gorm.Expr("balance - ?", balance))
 	if uc.Error != nil {
 		return uc.Error
 	}

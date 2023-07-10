@@ -54,13 +54,7 @@ func(uc *movieController) GetAllMovie(ctx *gin.Context) {
 	sort := ctx.Query("sort")
 
 	if sort != "title" && sort != "ticket_price" && sort != "age_rating" {
-		sort = "title"
-	}
-
-	if sort == "judul" {
-		sort = sort + " asc"
-	} else {
-		sort = sort + " desc"
+		sort = "title asc"
 	}
 	
 	result, err := uc.movieService.GetAllMovie(ctx.Request.Context(), pagination, filter, search, sort)

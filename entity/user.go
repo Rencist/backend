@@ -13,6 +13,7 @@ type User struct {
 	Username 	string  	`json:"username"`
 	Email 		string 		`json:"email" binding:"email"`
 	Age 		int			`json:"age"`
+	Balance		int			`json:"balance"`
 	Password 	string  	`json:"password"`
 	
 	Timestamp

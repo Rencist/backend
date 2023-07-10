@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"strconv"
 	"tamiyochi-backend/common"
 	"tamiyochi-backend/dto"
 	"tamiyochi-backend/entity"
@@ -17,6 +18,8 @@ type UserController interface {
 	DeleteUser(ctx *gin.Context)
 	UpdateUser(ctx *gin.Context)
 	MeUser(ctx *gin.Context)
+	TopUpBalance(ctx *gin.Context)
+	WithdrawBalance(ctx *gin.Context)
 }
 
 type userController struct {
@@ -40,14 +43,14 @@ func(uc *userController) RegisterUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
-	result, err := uc.userService.RegisterUser(ctx.Request.Context(), user)
+	_, err = uc.userService.RegisterUser(ctx.Request.Context(), user)
 	if err != nil {
 		res := common.BuildErrorResponse("Gagal Menambahkan User", err.Error(), common.EmptyObj{})
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	res := common.BuildResponse(true, "Berhasil Menambahkan User", result)
+	res := common.BuildResponse(true, "Berhasil Menambahkan User", common.EmptyObj{})
 	ctx.JSON(http.StatusOK, res)
 }
 
@@ -153,5 +156,71 @@ func(uc *userController) MeUser(ctx *gin.Context) {
 	}
 
 	res := common.BuildResponse(true, "Berhasil Mendapatkan User", result)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func(uc *userController) TopUpBalance(ctx *gin.Context) {
+	var user dto.BalanceDTO
+	err := ctx.ShouldBind(&user)
+	if err != nil {
+		res := common.BuildErrorResponse("Gagal Menambahkan Balance", err.Error(), common.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	token := ctx.MustGet("token").(string)
+	userID, err := uc.jwtService.GetUserIDByToken(token)
+	if err != nil {
+		response := common.BuildErrorResponse("Gagal Memproses Request", "Token Tidak Valid", nil)
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, response)
+		return
+	}
+	userBalance, err := strconv.Atoi(user.Balance)
+	if err != nil {
+		response := common.BuildErrorResponse("Gagal Menambahkan Balance", "Token Tidak Valid", nil)
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	err = uc.userService.TopUpBalance(ctx.Request.Context(), userID, userBalance)
+	if err != nil {
+		res := common.BuildErrorResponse("Gagal Menambahkan Balance", err.Error(), common.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+	res := common.BuildResponse(true, "Berhasil Menambahkan Balance", common.EmptyObj{})
+	ctx.JSON(http.StatusOK, res)
+}
+
+func(uc *userController) WithdrawBalance(ctx *gin.Context) {
+	var user dto.BalanceDTO
+	err := ctx.ShouldBind(&user)
+	if err != nil {
+		res := common.BuildErrorResponse("Gagal Mendapatkan Balance", err.Error(), common.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	token := ctx.MustGet("token").(string)
+	userID, err := uc.jwtService.GetUserIDByToken(token)
+	if err != nil {
+		response := common.BuildErrorResponse("Gagal Memproses Request", "Token Tidak Valid", nil)
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, response)
+		return
+	}
+	userBalance, err := strconv.Atoi(user.Balance)
+	if err != nil {
+		response := common.BuildErrorResponse("Gagal Mendapatkan Balance", "Token Tidak Valid", nil)
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	err = uc.userService.WithdrawBalance(ctx.Request.Context(), userID, userBalance)
+	if err != nil {
+		res := common.BuildErrorResponse("Gagal Mendapatkan Balance", err.Error(), common.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+	res := common.BuildResponse(true, "Berhasil Mendapatkan Balance", common.EmptyObj{})
 	ctx.JSON(http.StatusOK, res)
 }

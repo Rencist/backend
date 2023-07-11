@@ -21,11 +21,13 @@ type MovieService interface {
 
 type movieService struct {
 	movieRepository repository.MovieRepository
+	userRepository repository.UserRepository
 }
 
-func NewMovieService(ur repository.MovieRepository) MovieService {
+func NewMovieService(ur repository.MovieRepository, urr repository.UserRepository) MovieService {
 	return &movieService{
 		movieRepository: ur,
+		userRepository: urr,
 	}
 }
 
@@ -38,8 +40,17 @@ func(us *movieService) GetMovieByID(ctx context.Context, movieID int) (entity.Mo
 }
 
 func(us *movieService) CreateTransaction(ctx context.Context, transaction dto.TransactionCreateDTO) (entity.Transaction, error) {
+	user, _ := us.userRepository.FindUserByID(ctx, transaction.UserID)
 	movieID, _ := strconv.Atoi(transaction.MovieID)
 	totalPrice, _ := strconv.Atoi(transaction.TotalPrice)
+	movie, _ := us.movieRepository.FindMovieByID(ctx, movieID)
+	if user.Balance < totalPrice {
+		return entity.Transaction{}, errors.New("Saldo Anda Tidak Cukup")
+	}
+	movieAge, _ := strconv.Atoi(movie.AgeRating)
+	if user.Age < movieAge {
+		return entity.Transaction{}, errors.New("Umur Anda Tidak Cukup")
+	}
 	transactionID := uuid.New()
 	transactionEntity := entity.Transaction{
 		ID: transactionID,
@@ -71,6 +82,7 @@ func(us *movieService) CreateTransaction(ctx context.Context, transaction dto.Tr
 		}
 		us.movieRepository.CreateSeat(ctx, seatEntity)
 	}
+	us.userRepository.WithdrawBalance(ctx, user.ID, totalPrice)
 	return res, err
 }
 

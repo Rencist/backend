@@ -33,7 +33,7 @@ func main() {
 		movieRepository repository.MovieRepository = repository.NewMovieRepository(db)
 
 		userService service.UserService = service.NewUserService(userRepository)
-		movieService service.MovieService = service.NewMovieService(movieRepository)
+		movieService service.MovieService = service.NewMovieService(movieRepository, userRepository)
 
 		userController controller.UserController = controller.NewUserController(userService, jwtService)
 		movieController controller.MovieController = controller.NewMovieController(movieService, jwtService)

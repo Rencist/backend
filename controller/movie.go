@@ -138,7 +138,7 @@ func(uc *movieController) CreateTransaction(ctx *gin.Context) {
 	}
 	for i := 0; i < total_seat; i++ {
 		var seat dto.SeatCreateDTO
-		seat_number, _ := strconv.Atoi(ctx.Request.PostForm.Get("seat["+strconv.Itoa(i)+"]"))
+		seat_number, _ := strconv.Atoi(ctx.Request.PostForm.Get("seat["+strconv.Itoa(i)+"][seat]"))
 		seat.Seat = seat_number
 		transaction.Seat = append(transaction.Seat, seat)
 	}

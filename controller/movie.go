@@ -10,6 +10,7 @@ import (
 	"tamiyochi-backend/service"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type MovieController interface {
@@ -18,6 +19,7 @@ type MovieController interface {
 	CreateTransaction(ctx *gin.Context)
 	GetAvailableSeat(ctx *gin.Context)
 	GetUserTransaction(ctx *gin.Context)
+	DeleteTransaction(ctx *gin.Context)
 }
 
 type movieController struct {
@@ -182,6 +184,7 @@ func(uc *movieController) GetUserTransaction(ctx *gin.Context) {
 		return
 	}
 
+
 	result, err := uc.movieService.GetUserTransaction(ctx.Request.Context(), userID)
 	if err != nil {
 		res := common.BuildErrorResponse("Gagal Mendapatkan List Transaksi", err.Error(), common.EmptyObj{})
@@ -190,5 +193,39 @@ func(uc *movieController) GetUserTransaction(ctx *gin.Context) {
 	}
 
 	res := common.BuildResponse(true, "Berhasil Mendapatkan List Transaksi", result)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func(uc *movieController) DeleteTransaction(ctx *gin.Context) {
+	token := ctx.MustGet("token").(string)
+	userID, err := uc.jwtService.GetUserIDByToken(token)
+	if err != nil {
+		response := common.BuildErrorResponse("Gagal Memproses Request", "Token Tidak Valid", nil)
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	var transactionDTO dto.DeleteTransactionDTO
+	err = ctx.ShouldBind(&transactionDTO)
+	if err != nil {
+		res := common.BuildErrorResponse("Gagal Menghapus Transaksi", err.Error(), common.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+	transactionID, err := uuid.Parse(transactionDTO.TransactionID)
+	if err != nil {
+		res := common.BuildErrorResponse("Gagal Menghapus Transaksi", err.Error(), common.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	err = uc.movieService.DeleteTransaction(ctx.Request.Context(), transactionID, userID)
+	if err != nil {
+		res := common.BuildErrorResponse("Gagal Menghapus Transaksi", err.Error(), common.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := common.BuildResponse(true, "Berhasil Menghapus Transaksi", common.EmptyObj{})
 	ctx.JSON(http.StatusOK, res)
 }

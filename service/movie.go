@@ -17,6 +17,7 @@ type MovieService interface {
 	CreateTransaction(ctx context.Context, transaction dto.TransactionCreateDTO) (entity.Transaction, error)
 	GetAvailableSeat(ctx context.Context, movieID int) ([]dto.AvalilableSeat, error)
 	GetUserTransaction(ctx context.Context, userID uuid.UUID) ([]dto.TransactionResponse, error)
+	DeleteTransaction(ctx context.Context, transactionID uuid.UUID, userID uuid.UUID) error
 }
 
 type movieService struct {
@@ -107,10 +108,25 @@ func(us *movieService) GetUserTransaction(ctx context.Context, userID uuid.UUID)
 		movieName, _ := us.movieRepository.FindMovieByID(ctx, v.MovieID)
 		responseDTO = append(responseDTO, dto.TransactionResponse{
 			ID: v.ID,
+			MovieID: v.MovieID,
 			MovieName: movieName.Title,
 			TotalPrice: strconv.Itoa(v.TotalPrice),
 			Seat: seatDTO,
 		})
 	}
 	return responseDTO, nil
+}
+
+func(us *movieService) DeleteTransaction(ctx context.Context, transactionID uuid.UUID, userID uuid.UUID) error {
+	user, err := us.userRepository.FindUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	transaction, err := us.movieRepository.FindTransactionByID(ctx, transactionID)
+	if err != nil {
+		return err
+	}
+	us.userRepository.TopUpBalance(ctx, user.ID, transaction.TotalPrice)
+	
+	return us.movieRepository.DeleteTransaction(ctx, transactionID)
 }

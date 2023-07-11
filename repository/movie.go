@@ -20,6 +20,8 @@ type MovieRepository interface {
 	GetAvailableSeat(ctx context.Context, movieID int) ([]dto.AvalilableSeat, error)
 	FindSeatByTransactionID(ctx context.Context, transactionID uuid.UUID) ([]entity.Seat, error)
 	GetUserTransaction(ctx context.Context, userID uuid.UUID) ([]entity.Transaction, error)
+	DeleteTransaction(ctx context.Context, transactionID uuid.UUID) error
+	FindTransactionByID(ctx context.Context, transactionID uuid.UUID) (entity.Transaction, error)
 }
 
 type movieConnection struct {
@@ -178,6 +180,23 @@ func(db *movieConnection) FindSeatByTransactionID(ctx context.Context, transacti
 func(db *movieConnection) GetUserTransaction(ctx context.Context, userID uuid.UUID) ([]entity.Transaction, error) {
 	var transaction []entity.Transaction
 	ux := db.connection.Where("user_id = ?", userID, ).Find(&transaction)
+	if ux.Error != nil {
+		return transaction, ux.Error
+	}
+	return transaction, nil
+}
+
+func(db *movieConnection) DeleteTransaction(ctx context.Context, transactionID uuid.UUID) error {
+	ux := db.connection.Where("id = ?", transactionID).Delete(&entity.Transaction{})
+	if ux.Error != nil {
+		return ux.Error
+	}
+	return nil
+}
+
+func(db *movieConnection) FindTransactionByID(ctx context.Context, transactionID uuid.UUID) (entity.Transaction, error) {
+	var transaction entity.Transaction
+	ux := db.connection.Where("id = ?", transactionID).Take(&transaction)
 	if ux.Error != nil {
 		return transaction, ux.Error
 	}
